@@ -49,7 +49,7 @@ class Net(tf.keras.Model):
                         blocks.append(PostRes(n_out[i], n_out[i]))
                 else:
                     blocks.append(PostRes(n_out[i], n_out[i]))
-            setattr(self, 'group' + str(i + 1), tf.keras.layers.Sequential(*blocks))
+            setattr(self, 'group' + str(i + 1), tf.keras.layers.Sequential([*blocks]))
         
         self.path1 = tf.keras.layers.Sequential([
             tf.keras.layers.Conv3D(32, kernel_size = 3, padding = "same"),

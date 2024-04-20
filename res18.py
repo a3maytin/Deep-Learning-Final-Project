@@ -56,7 +56,7 @@ class Net(tf.layers.Model):
                     blocks.append(PostRes(self.featureNum_forw[i], self.featureNum_forw[i+1]))
                 else:
                     blocks.append(PostRes(self.featureNum_forw[i+1], self.featureNum_forw[i+1]))
-            setattr(self, 'forw' + str(i + 1), tf.keras.layers.Sequential(*blocks))
+            setattr(self, 'forw' + str(i + 1), tf.keras.layers.Sequential([*blocks]))
             
         for i in range(len(num_blocks_back)):
             blocks = []
@@ -69,7 +69,7 @@ class Net(tf.layers.Model):
                     blocks.append(PostRes(self.featureNum_back[i+1]+self.featureNum_forw[i+2]+addition, self.featureNum_back[i]))
                 else:
                     blocks.append(PostRes(self.featureNum_back[i], self.featureNum_back[i]))
-            setattr(self, 'back' + str(i + 2), tf.keras.layers.Sequential(*blocks))
+            setattr(self, 'back' + str(i + 2), tf.keras.layers.Sequential([*blocks]))
 
         self.maxpool1 = tf.keras.layers.MaxPooling3D(pool_size=2, strides=2)
         self.maxpool2 = tf.keras.layers.MaxPooling3D(pool_size=2, strides=2)
