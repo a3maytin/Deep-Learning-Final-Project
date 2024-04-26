@@ -34,7 +34,8 @@ def setgpu(gpuinput):
     else:
         gpus = gpuinput
         if any([g not in freeids for g in gpus.split(',')]):
-            raise ValueError('gpu'+g+'is being used')
+            # raise ValueError('gpu'+g+'is being used')
+            raise ValueError('gpu is being used') #commented this out so the file wouldn't scream at me
     print('using gpu '+gpus)
     os.environ['CUDA_VISIBLE_DEVICES']=gpus
     return len(gpus.split(','))
