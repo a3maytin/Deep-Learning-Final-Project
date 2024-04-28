@@ -2,6 +2,8 @@ import os
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from pathlib import Path
+import shutil
 
 
 def split_data(data_dir, test_size=0.2, random_state=42):
@@ -42,7 +44,9 @@ def save_annotations(row, file_name):
 
     class_name_to_index = {class_name: i for i, class_name in enumerate(['A', 'B', 'E', 'G'])}
 
-    file_name.write(f"{class_name_to_index[row[6]]} {formatted[0]} {formatted[1]} {formatted[2]} {formatted[3]}\n")
+    class_index = class_name_to_index[row[6]]
+    formatted_string = "{} {:.6f} {:.6f} {:.6f} {:.6f}\n".format(class_index, *formatted)
+    file_name.write(formatted_string)
 
 
 def save_data(train_test_or_val, name, data_dir):
@@ -77,15 +81,22 @@ def save_data(train_test_or_val, name, data_dir):
     save_data(data, 'train', '/path/to/data')
     ```
     """
-    if not os.path.exists(data_dir + name):
-        os.makedirs(data_dir + name)
-        os.makedirs(data_dir + name + '/images')
-        os.makedirs(data_dir + name + '/labels')
+    data_path = Path(data_dir) / name
+    data_path.mkdir(parents=True, exist_ok=True)
+
+    images_path = data_path / 'images'
+    images_path.mkdir(exist_ok=True)
+
+    labels_path = data_path / 'labels'
+    labels_path.mkdir(exist_ok=True)
 
     for line in train_test_or_val.values:
-        os.system('cp ../data/{}/{}.jpg ../data/{}/images/{}_{}.jpg'.format(line[0], line[1], name, line[0], line[1]))
+        source_image_path = Path('../data') / line[0] / f"{line[1]}.jpg"
+        destination_image_path = images_path / f"{line[0]}_{line[1]}.jpg"
+        shutil.copy(source_image_path, destination_image_path)
 
-        with open('../data/{}/labels/{}_{}.txt'.format(name, line[0], line[1]), 'w') as file:
+        label_file_path = labels_path / f"{line[0]}_{line[1]}.txt"
+        with label_file_path.open('w') as file:
             save_annotations(line, file)
 
 
