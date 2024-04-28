@@ -6,7 +6,7 @@ import numpy as np
 from pydicom import dicomio
 import SimpleITK as sitk
 
-
+# this gets the annotations
 class XML_preprocessor(object):
 
     def __init__(self, data_path, num_classes, normalize=False):
@@ -41,6 +41,7 @@ class XML_preprocessor(object):
 
             bounding_boxes = []
             one_hot_classes = []
+            # find coordinates of box w/ tumor, make bounding box
             for object_tree in root.findall('object'):
                 for bounding_box in object_tree.iter('bndbox'):
                     xmin = float(bounding_box.find('xmin').text)
@@ -56,11 +57,14 @@ class XML_preprocessor(object):
 
                     bounding_boxes.append([xmin, ymin, xmax, ymax])
                     class_name = object_tree.find('name').text
+
+                    # this makes one hot encoding of label
                     one_hot_classes.append(self._generate_one_hot_vector(class_name))
 
             image_data = np.hstack((np.asarray(bounding_boxes), np.asarray(one_hot_classes)))
             self.data[filename] = image_data
 
+    # one hot encoding of 4 labels
     def _generate_one_hot_vector(self, name):
         """
         Generate a one-hot vector for the given name.
