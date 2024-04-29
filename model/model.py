@@ -4,7 +4,7 @@ import keras
 import pandas as pd
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, GlobalAveragePooling2D, Dropout
-from keras.models import Model
+from keras.models import Model, save_model
 from keras.optimizers.legacy import Adam, SGD
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
@@ -256,3 +256,7 @@ if __name__ == "__main__":
 
     print("\n\nSecond training\n")
     train_history = trainer.second_train(epochs=args.second_epochs)
+
+    print(base_model.evaluate(test_gen))
+
+    save_model(hate_cancer_model, "../saved_models/hate_cancer_model.h5")
