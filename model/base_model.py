@@ -128,6 +128,24 @@ class DetectionModel(Model):
 
         return out
 
+# def create_classification_model():
+
+#     #Create a structure similar to the classification model from deeplung
+#     #Specifically, the ". Gradient Boosting Machine with 3D Dual Path Net Feature for Nodule Classification"
+    
+#     #instantiate the classification model
+#     classification_model = ClassificationModel()
+    
+#     return classification_model
+
+# from sklearn.ensemble import GradientBoostingClassifier as gbt
+
+# class ClassificationModel(Model):
+#     def __init__(self, **kwargs):
+#         super(ClassificationModel, self).__init__(**kwargs)
+
+        
+
 
 
 

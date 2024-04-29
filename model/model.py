@@ -12,7 +12,7 @@ from tensorflow import keras
 from base_model import create_base_model, preprocess_input
 from dataGenerator import ImageDataGenerator
 
-
+# I want to rename this to create_predictions or something 
 def create_detector(input_model, class_count=4, learning_rate=0.00025):
     """
     This function takes an input model and returns a new model that predicts both the bounding box and class of
