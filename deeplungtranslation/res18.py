@@ -110,7 +110,7 @@ class Net(tf.layers.Model):
         #comb3 = self.drop(comb3)
         rev2 = self.path2(comb3)
         
-        comb2 = self.back2(tf.concat((rev2, out2,coord), 1))#64+64
+        comb2 = self.back2(tf.concat((rev2, out2, coord), 1))#64+64
         comb2 = self.drop(comb2)
         out = self.output(comb2)
         size = out.size()
