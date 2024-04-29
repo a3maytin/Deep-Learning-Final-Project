@@ -257,6 +257,6 @@ if __name__ == "__main__":
     print("\n\nSecond training\n")
     train_history = trainer.second_train(epochs=args.second_epochs)
 
-    print(base_model.evaluate(test_gen))
+    print(hate_cancer_model.evaluate(test_gen))
 
     save_model(hate_cancer_model, "../saved_models/hate_cancer_model.h5")
