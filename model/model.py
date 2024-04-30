@@ -1,18 +1,24 @@
 import argparse
 
 import keras
+import numpy as np
 import pandas as pd
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+import tensorflow as tf
+from PIL import Image
 from keras.layers import Dense, GlobalAveragePooling2D, Dropout
-from keras.models import Model, save_model
+from keras.models import Model
 from keras.optimizers.legacy import Adam, SGD
+from matplotlib import patches, pyplot as plt
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
+from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.python.keras.models import load_model, save_model
 
-from base_model import create_base_model, preprocess_input, create_detection_model, DetectionModel
+from base_model import preprocess_input, DetectionModel
 from dataGenerator import ImageDataGenerator
 
-# I want to rename this to create_predictions or something 
+
+# I want to rename this to create_predictions or something
 def create_detector(input_model, class_count=4, learning_rate=0.00025):
     """
     This function takes an input model and returns a new model that predicts both the bounding box and class of
@@ -198,66 +204,126 @@ def split_data(data_filepath, test_size=0.1, random_state=42):
     return train_gen, test_gen, val_gen
 
 
+def display_prediction_on_sample_image(model, generator, sample_idx):
+    ''' Plota a imagem referente a uma instância dos dados, mostrando a predição do modelo '''
+
+    # Processamento da tupla de dados
+    data = generator.df.iloc[sample_idx]
+    X = generator.map(generator._load_image(data)).reshape((1, 512, 512, 3))
+
+    # Predição
+    labels = ["A", "B", "E", "G"]
+    bbox, label = np.mean(model(X), axis=1)
+    bbox = np.array(bbox * 512, dtype="int")
+    label = labels[np.argmax(label)]
+
+    # Plotagem da imagem
+    img = Image.open(generator.data_directory_path + data.filename)
+    fig, ax = plt.subplots()
+    ax.imshow(img)
+
+    # Retângulo da predição
+    pred_rect = patches.Rectangle(
+        (bbox[0], bbox[1]),
+        bbox[2] - bbox[0],
+        bbox[3] - bbox[1],
+        linewidth=2,
+        edgecolor='r',
+        facecolor='none',
+        label="predicted: " + label
+    )
+    ax.add_patch(pred_rect)
+
+    # Retângulo original
+    bbox = np.array([data.xmin, data.ymin, data.xmax, data.ymax])
+    bbox = np.array(bbox * 512, dtype="int")
+    rect = patches.Rectangle(
+        (bbox[0], bbox[1]),
+        bbox[2] - bbox[0],
+        bbox[3] - bbox[1],
+        linewidth=1,
+        edgecolor='b',
+        facecolor='none',
+        label="ground-truth: " + labels[data["class"]]
+    )
+    ax.add_patch(rect)
+
+    # Ajustes e plotagem final
+    ax.axis("off")
+    ax.legend(loc='upper right')
+    plt.grid(False)
+    plt.show()
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Train the model.')
-    parser.add_argument('--first_epochs', type=int, default=1, help='Number of epochs for the first training')
-    parser.add_argument('--second_epochs', type=int, default=1, help='Number of epochs for the second training')
-    args = parser.parse_args()
+    with tf.device("/gpu:0"):
+        parser = argparse.ArgumentParser(description='Train the model.')
+        parser.add_argument('--first_epochs', type=int, default=1, help='Number of epochs for the first training')
+        parser.add_argument('--second_epochs', type=int, default=1, help='Number of epochs for the second training')
+        args = parser.parse_args()
 
-    train_gen, test_gen, val_gen = split_data("../data/")
+        train_gen, test_gen, val_gen = split_data("../data/")
 
-    # base_model = create_detection_model(input_shape=(512, 512, 3))
-    base_model = DetectionModel(input_shape=(512, 512, 3))
-    hate_cancer_model = create_detector(base_model)
+        input_shape = (512, 512, 3)
+        input_layer = keras.layers.Input(shape=input_shape)
+        tmp_model = DetectionModel()
+        outputs = tmp_model(input_layer)
+        ymodel = tf.keras.Model(inputs=input_layer, outputs=outputs)
 
-    train_gen.map = preprocess_input
-    test_gen.map = preprocess_input
-    val_gen.map = preprocess_input
+        base_model = ymodel
+        hate_cancer_model = create_detector(base_model)
 
+        train_gen.map = preprocess_input
+        test_gen.map = preprocess_input
+        val_gen.map = preprocess_input
 
-    def get_early_stopping(patience=6):
-        """
-        Create an instance of the EarlyStopping object for the given parameters.
+        def get_early_stopping(patience=6):
+            """
+            Create an instance of the EarlyStopping object for the given parameters.
 
-        :param patience: Number of epochs with no improvement after which training will be stopped. Default is 6.
-        :type patience: int
+            :param patience: Number of epochs with no improvement after which training will be stopped. Default is 6.
+            :type patience: int
 
-        :return: An instance of the EarlyStopping object with the specified parameters.
-        :rtype: EarlyStopping
-        """
-        return EarlyStopping(monitor='loss', min_delta=0, patience=patience, verbose=2, mode='auto')
-
-
-    def get_checkpointer(model_name):
-        """
-        Constructs a ModelCheckpoint object to save the best model weights during training.
-
-        :param model_name: The name of the model.
-        :type model_name: str
-        :return: The ModelCheckpoint object.
-        :rtype: keras.callbacks.ModelCheckpoint
-        """
-        return ModelCheckpoint(filepath="../backups/" + model_name + '.{epoch:02d}.hdf5', verbose=2,
-                               save_best_only=True, save_weights_only=True)
+            :return: An instance of the EarlyStopping object with the specified parameters.
+            :rtype: EarlyStopping
+            """
+            return EarlyStopping(monitor='loss', min_delta=0, patience=patience, verbose=2, mode='auto')
 
 
-    early_stopping = get_early_stopping()
-    checkpointer = get_checkpointer("hate_cancer_model")
+        def get_checkpointer(model_name):
+            """
+            Constructs a ModelCheckpoint object to save the best model weights during training.
 
-    trainer = ModelTrainer(hate_cancer_model, train_gen, val_gen, early_stopping, checkpointer)
+            :param model_name: The name of the model.
+            :type model_name: str
+            :return: The ModelCheckpoint object.
+            :rtype: keras.callbacks.ModelCheckpoint
+            """
+            return ModelCheckpoint(filepath="../backups/" + model_name + '.{epoch:02d}.hdf5', verbose=2,
+                                   save_best_only=True, save_weights_only=True)
 
-    print("First training\n")
-    train_history = trainer.first_train(epochs=args.first_epochs)
 
-    for layer in hate_cancer_model.layers[:105]:
-        layer.trainable = False
+        early_stopping = get_early_stopping()
+        checkpointer = get_checkpointer("hate_cancer_model")
 
-    for layer in hate_cancer_model.layers[105:]:
-        layer.trainable = True
+        trainer = ModelTrainer(hate_cancer_model, train_gen, val_gen, early_stopping, checkpointer)
 
-    print("\n\nSecond training\n")
-    train_history = trainer.second_train(epochs=args.second_epochs)
+        print("First training\n")
+        train_history = trainer.first_train(epochs=args.first_epochs)
 
-    print(hate_cancer_model.evaluate(test_gen))
+        for layer in hate_cancer_model.layers[:105]:
+            layer.trainable = False
 
-    save_model(hate_cancer_model, "../saved_models/hate_cancer_model.h5")
+        for layer in hate_cancer_model.layers[105:]:
+            layer.trainable = True
+
+        print("\n\nSecond training\n")
+        train_history = trainer.second_train(epochs=args.second_epochs)
+
+        print(hate_cancer_model.evaluate(test_gen))
+
+        save_model(hate_cancer_model, "../saved_models/hate_cancer_model.keras")
+        display_prediction_on_sample_image(hate_cancer_model, test_gen, -1)
+        display_prediction_on_sample_image(hate_cancer_model, test_gen, 10)
+        display_prediction_on_sample_image(hate_cancer_model, test_gen, 1)
+        display_prediction_on_sample_image(hate_cancer_model, test_gen, 9)

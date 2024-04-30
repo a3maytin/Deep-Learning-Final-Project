@@ -8,24 +8,24 @@ import tensorflow as tf
 from PostRes import PostRes
 
 
-def create_base_model(input_shape=(512, 512, 3)):
-    input_layer = Input(shape=input_shape)
-
-    # Add convolutional and pooling layers
-    x = Conv2D(32, (3, 3), activation='relu')(input_layer)
-    x = MaxPooling2D((2, 2))(x)
-    x = Conv2D(64, (3, 3), activation='relu')(x)
-    x = MaxPooling2D((2, 2))(x)
-    x = Conv2D(128, (3, 3), activation='relu')(x)
-    x = MaxPooling2D((2, 2))(x)
-
-    # Flatten the output to prepare it for the fully connected layers
-    x = Flatten()(x)
-
-    # Create the model
-    base_model = Model(inputs=input_layer, outputs=x)
-
-    return base_model
+# def create_base_model(input_shape=(512, 512, 3)):
+#     input_layer = Input(shape=input_shape)
+#
+#     # Add convolutional and pooling layers
+#     x = Conv2D(32, (3, 3), activation='relu')(input_layer)
+#     x = MaxPooling2D((2, 2))(x)
+#     x = Conv2D(64, (3, 3), activation='relu')(x)
+#     x = MaxPooling2D((2, 2))(x)
+#     x = Conv2D(128, (3, 3), activation='relu')(x)
+#     x = MaxPooling2D((2, 2))(x)
+#
+#     # Flatten the output to prepare it for the fully connected layers
+#     x = Flatten()(x)
+#
+#     # Create the model
+#     base_model = Model(inputs=input_layer, outputs=x)
+#
+#     return base_model
 
 
 def preprocess_input(x, data_format=None):
@@ -34,17 +34,17 @@ def preprocess_input(x, data_format=None):
     )
 
 
-def create_detection_model(input_shape=(512, 521, 3)):
-    input_layer = Input(shape=input_shape)
-
-    # Create a structure similar to the detection model from deeplung
-    # Specifically, the "3D Faster R-CNN with Deep 3D Dual Path Netfor Nodule Detection"
-
-    # instantiate the detection model
-    detection_model = DetectionModel(input_shape=input_shape)
-    detection_model.build(input_shape)
-
-    return detection_model
+# def create_detection_model(input_shape=(512, 521, 3)):
+#     input_layer = Input(shape=input_shape)
+#
+#     # Create a structure similar to the detection model from deeplung
+#     # Specifically, the "3D Faster R-CNN with Deep 3D Dual Path Netfor Nodule Detection"
+#
+#     # instantiate the detection model
+#     detection_model = DetectionModel(input_shape=input_shape)
+#     detection_model.build(input_shape)
+#
+#     return detection_model
 
 
 class DetectionModel(Model):
@@ -110,7 +110,7 @@ class DetectionModel(Model):
                                         Conv2D(50, kernel_size=1)])
 
     def call(self, inputs):
-        inputs = tf.expand_dims(inputs, axis=0)
+        # inputs = tf.expand_dims(inputs, axis=0)
         out = self.preBlock(inputs)
         outpool = self.maxpool0(out)
         out1 = self.forw1(outpool)
