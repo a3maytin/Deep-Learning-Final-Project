@@ -9,7 +9,7 @@ from keras.optimizers.legacy import Adam, SGD
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
 
-from base_model import create_base_model, preprocess_input
+from base_model import create_base_model, preprocess_input, create_detection_model
 from dataGenerator import ImageDataGenerator
 
 # I want to rename this to create_predictions or something 
@@ -206,7 +206,7 @@ if __name__ == "__main__":
 
     train_gen, test_gen, val_gen = split_data("../data/")
 
-    base_model = create_base_model(input_shape=(512, 512, 3))
+    base_model = create_detection_model(input_shape=(512, 512, 3))
     hate_cancer_model = create_detector(base_model)
 
     train_gen.map = preprocess_input
