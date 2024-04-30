@@ -3,6 +3,7 @@ from keras.layers import Input, Conv2D, Conv2DTranspose, MaxPooling2D, Flatten, 
 from keras.models import Model
 from keras.src.applications import imagenet_utils
 from tensorflow import concat
+import tensorflow as tf
 
 from PostRes import PostRes
 
@@ -40,7 +41,7 @@ def create_detection_model(input_shape=(512, 521, 3)):
     # Specifically, the "3D Faster R-CNN with Deep 3D Dual Path Netfor Nodule Detection"
 
     # instantiate the detection model
-    detection_model = DetectionModel(inputs=input_layer, input_shape=input_shape)
+    detection_model = DetectionModel(input_shape=input_shape)
     detection_model.build(input_shape)
 
     return detection_model
@@ -94,25 +95,23 @@ class DetectionModel(Model):
         self.maxpool3 = MaxPooling2D(pool_size=2, strides=2)
 
         self.path1 = Sequential([
-            Conv2DTranspose(filters=64, kernel_size=2, stride=2),
+            Conv2DTranspose(filters=64, kernel_size=2, strides=2),
             BatchNormalization(),
             ReLU()])
         self.path2 = Sequential([
-            Conv2DTranspose(filters=64, kernel_size=2, stride=2),
+            Conv2DTranspose(filters=64, kernel_size=2, strides=2),
             BatchNormalization(),
             ReLU()])
         self.drop = Dropout(rate=0.5)
 
-        self.output = Sequential(Conv2D(64, kernel_size=1),
-                                 ReLU(),
-                                 # I don't actually understand the size input for this one in the original code, set to 50 here
-                                 Conv2D(50, kernel_size=1))
+        # I don't actually understand the size input for this one in the original code, set to 50 here
+        self.final_output = Sequential([Conv2D(64, kernel_size=1),
+                                        ReLU(),
+                                        Conv2D(50, kernel_size=1)])
 
-    def build(self, input_shape):
-        self.input_layer = Input(shape=input_shape)
-
-    def call(self, x):
-        out = self.preBlock(x)
+    def call(self, inputs):
+        inputs = tf.expand_dims(inputs, axis=0)
+        out = self.preBlock(inputs)
         outpool = self.maxpool0(out)
         out1 = self.forw1(outpool)
         out1pool = self.maxpool1(out1)
@@ -125,13 +124,13 @@ class DetectionModel(Model):
         # out4 = self.drop(out4)
 
         reversed1 = self.path1(out4)
-        combined1 = self.back2(concat((reversed, out3)))
+        combined1 = self.back2(tf.concat([reversed1, out3], axis=-1))
         # comb3 = self.drop(comb3)
 
         reversed2 = self.path2(combined1)
-        combined2 = self.back1(concat(reversed2, out2))
+        combined2 = self.back1(tf.concat([reversed2, out2], axis=-1))
         combined2 = self.drop(combined2)
 
-        out = self.output(combined2)
+        out = self.final_output(combined2)
 
         return out

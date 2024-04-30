@@ -1,7 +1,6 @@
-import numpy as np
-
 import tensorflow as tf
 from tensorflow import keras
+
 
 class PostRes(tf.keras.Model):
     """
@@ -14,10 +13,10 @@ class PostRes(tf.keras.Model):
         stride (int, optional): Stride value for the convolutional layers. Defaults to 1.
 
     Attributes:
-        conv1 (tf.keras.layers.Conv3D): Convolutional layer 1.
+        conv1 (tf.keras.layers.Conv2D): Convolutional layer 1.
         bn1 (tf.keras.layers.BatchNormalization): Batch Normalization layer 1.
         relu (tf.keras.layers.ReLU): ReLU activation layer.
-        conv2 (tf.keras.layers.Conv3D): Convolutional layer 2.
+        conv2 (tf.keras.layers.Conv2D): Convolutional layer 2.
         bn2 (tf.keras.layers.BatchNormalization): Batch Normalization layer 2.
         shortcut (tf.keras.layers.Sequential or None): Shortcut connection.
 
@@ -25,22 +24,25 @@ class PostRes(tf.keras.Model):
         forward: Performs forward pass through the PostRes block.
 
     """
+
     def __init__(self, n_in, n_out, stride=1):
         super(PostRes, self).__init__()
-        self.conv1 = tf.keras.layers.Conv3D(n_out, kernel_size=3, strides=stride, padding='same')
+        self.conv1 = tf.keras.layers.Conv2D(n_out, kernel_size=3, strides=stride, padding='same')
         self.bn1 = tf.keras.layers.BatchNormalization()
         self.relu = tf.keras.layers.ReLU()
-        self.conv2 = tf.keras.layers.Conv3D(n_out, kernel_size=3, padding='same')
+        self.conv2 = tf.keras.layers.Conv2D(n_out, kernel_size=3, padding='same')
         self.bn2 = tf.keras.layers.BatchNormalization()
 
+        # Corrected "shortcut" initialzation here
         if stride != 1 or n_out != n_in:
-            self.shortcut = tf.keras.layers.Sequential(
-                tf.keras.layers.Conv3D(n_out, kernel_size=1, strides=stride),
-                tf.keras.layers.BatchNormalization())
+            self.shortcut = tf.keras.Sequential([
+                tf.keras.layers.Conv2D(n_out, kernel_size=1, strides=stride),
+                tf.keras.layers.BatchNormalization()
+            ])
         else:
             self.shortcut = None
 
-    def forward(self, x):
+    def call(self, x, training=None, mask=None):
         residual = x
         if self.shortcut is not None:
             residual = self.shortcut(x)
