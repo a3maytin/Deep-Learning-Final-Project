@@ -40,7 +40,7 @@ The `preprocessing` directory contains the following files:
 ## Usage
 
 To use this project, you need to first preprocess the data using the scripts in the `preprocessing` directory. The data
-can be found at [the cancer imaging archive.](https://www.cancerimaingarchive.net/collection/lung-pet-ct-dx/) Both the
+can be found at [the cancer imaging archive.](https://www.cancerimagingarchive.net/collection/lung-pet-ct-dx/) Both the
 data itself and the annotations need to be downloaded. After preprocessing, you can train the model using the scripts in
 the `model` directory.
 
