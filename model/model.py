@@ -14,7 +14,6 @@ from base_model import preprocess_input, DetectionModel
 from dataGenerator import ImageDataGenerator as ImageDataGenerator
 
 
-# I want to rename this to create_predictions or something
 def create_detector(input_model, class_count=4, learning_rate=0.00025):
     """
     This function takes an input model and returns a new model that predicts both the bounding box and class of
@@ -165,9 +164,6 @@ class ModelTrainer:
         """
         self._recompile_model()
 
-        # history = self._train_model(epochs)
-        # history = history.history
-
         return self._train_model(epochs)
 
 
@@ -256,12 +252,6 @@ if __name__ == "__main__":
 
         print("First training\n")
         train_history = trainer.first_train(epochs=args.first_epochs)
-
-        for layer in hate_cancer_model.layers[:105]:
-            layer.trainable = False
-
-        for layer in hate_cancer_model.layers[105:]:
-            layer.trainable = True
 
         print("\n\nSecond training\n")
         train_history = trainer.second_train(epochs=args.second_epochs)
