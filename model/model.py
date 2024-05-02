@@ -12,10 +12,9 @@ from matplotlib import patches, pyplot as plt
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
 from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
-from tensorflow.python.keras.models import load_model, save_model
 
 from base_model import preprocess_input, DetectionModel
-from dataGenerator import ImageDataGenerator
+from dataGenerator import ImageDataGenerator as ImageDataGenerator
 
 
 # I want to rename this to create_predictions or something
@@ -204,7 +203,7 @@ def split_data(data_filepath, test_size=0.1, random_state=42):
     return train_gen, test_gen, val_gen
 
 
-def display_prediction_on_sample_image(model, generator, sample_idx):
+def display_prediction_on_sample_image(model, generator, sample_idx, save=False, save_path=None):
     ''' Plota a imagem referente a uma instância dos dados, mostrando a predição do modelo '''
 
     # Processamento da tupla de dados
@@ -252,14 +251,17 @@ def display_prediction_on_sample_image(model, generator, sample_idx):
     ax.axis("off")
     ax.legend(loc='upper right')
     plt.grid(False)
-    plt.show()
+    # plt.show()
+
+    if save and save_path is not None:
+        fig.savefig(save_path + f"sample_{sample_idx}.png")
 
 
 if __name__ == "__main__":
     with tf.device("/gpu:0"):
         parser = argparse.ArgumentParser(description='Train the model.')
-        parser.add_argument('--first_epochs', type=int, default=1, help='Number of epochs for the first training')
-        parser.add_argument('--second_epochs', type=int, default=1, help='Number of epochs for the second training')
+        parser.add_argument('--first_epochs', type=int, default=6, help='Number of epochs for the first training')
+        parser.add_argument('--second_epochs', type=int, default=20, help='Number of epochs for the second training')
         args = parser.parse_args()
 
         train_gen, test_gen, val_gen = split_data("../data/")
@@ -276,6 +278,7 @@ if __name__ == "__main__":
         train_gen.map = preprocess_input
         test_gen.map = preprocess_input
         val_gen.map = preprocess_input
+
 
         def get_early_stopping(patience=6):
             """
@@ -322,8 +325,4 @@ if __name__ == "__main__":
 
         print(hate_cancer_model.evaluate(test_gen))
 
-        save_model(hate_cancer_model, "../saved_models/hate_cancer_model.keras")
-        display_prediction_on_sample_image(hate_cancer_model, test_gen, -1)
-        display_prediction_on_sample_image(hate_cancer_model, test_gen, 10)
-        display_prediction_on_sample_image(hate_cancer_model, test_gen, 1)
-        display_prediction_on_sample_image(hate_cancer_model, test_gen, 9)
+        hate_cancer_model.save("../saved_models/hate_cancer_model.keras")

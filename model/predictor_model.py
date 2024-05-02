@@ -1,10 +1,10 @@
 import keras
-import pandas as pd
 from keras.layers import Dense, GlobalAveragePooling2D, Dropout, Flatten
 from keras.models import Model
-from keras.optimizers.legacy import Adam, SGD
-from sklearn.ensemble import GradientBoostingClassifier 
+from keras.optimizers.legacy import Adam
+from sklearn.ensemble import GradientBoostingClassifier
 from tensorflow import keras
+
 
 def create_predictor(input_model, class_count=4, learning_rate=0.00025):
     """
@@ -51,29 +51,31 @@ def create_predictor(input_model, class_count=4, learning_rate=0.00025):
 
     return detector_model
 
+
 class ClassifierModel(Model):
     def __init__(self, input_model, class_count=4):
         super(ClassifierModel, self).__init__()
 
-        #Layers for tumor location prediction
+        # Layers for tumor location prediction
         self.dense1 = Dense(128, activation='relu')
         self.dense2 = Dense(64, activation='relu')
         self.dense3 = Dense(32, activation='relu')
         self.dense4 = Dense(4, activation='sigmoid', name="bbox")
 
-        #Create a Gradient Boosting Machine for label prediction
-        self.gbm_classifier = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
+        # Create a Gradient Boosting Machine for label prediction
+        self.gbm_classifier = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3,
+                                                         random_state=42)
 
     def call(self, inputs, labels):
-        #model recieves intermediatefeatures as inputs
+        # model recieves intermediatefeatures as inputs
 
         # Flatten intermediate features if needed
         if len(inputs.shape) == 4:
             inputs = Flatten()(inputs)
-        
+
         # Train GBM
         self.gbm_classifier.fit(inputs.numpy(), labels)
-        
+
         # Predict labels using GBM
         label_prediction = self.gbm_classifier.predict(inputs.numpy())
 

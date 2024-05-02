@@ -7,12 +7,13 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.utils import Sequence, to_categorical
 
 
+# Type 'ImageDataGenerator' doesn't have expected attributes 'df', 'map', '_load_image', 'data_directory_path'
 class ImageDataGenerator(Sequence):
-    def __init__(self, annotations, data_dir, batch_size=64, input_shape=(512, 512, 3), shuffle=True,
-                 image_processing_func=None):
+    def __init__(self, annotations, data_directory_path, batch_size=64, input_shape=(512, 512, 3), shuffle=True,
+                 image_processing_func=None, map=None, df=None, _load_image=None):
         """
         :param annotations: Pandas DataFrame containing annotations for the images. Must have the following columns: patient_id, image_path, class
-        :param data_dir: Directory path where the images are stored.
+        :param data_directory_path: Directory path where the images are stored.
         :param batch_size: (optional) Number of samples in each batch. Default is 64.
         :param input_shape: (optional) Shape of the input images. Default is (512, 512, 3).
         :param shuffle: (optional) Whether to shuffle the data before each epoch. Default is True.
@@ -26,14 +27,15 @@ class ImageDataGenerator(Sequence):
         obj = ClassName(annotations, data_dir)
 
         """
+        self.df = annotations.copy()
         self.annotations = annotations.copy()
         self.annotations["filename"] = self.annotations.patient_id + "/" + self.annotations.image_path.astype(
             "str") + ".jpg"
         self.annotations.drop(axis=1, labels=["patient_id", "image_path"], inplace=True)
         self._normalize_bounding_box(input_shape)
         self._map_classes_to_integers()
-        self.data_dir = data_dir if data_dir[-1] == '/' else data_dir + '/'
-        self.image_processing_func = image_processing_func if image_processing_func else lambda x: x
+        self.data_dir = data_directory_path if data_directory_path[-1] == '/' else data_directory_path + '/'
+        self.map = image_processing_func if image_processing_func else lambda x: x
         self.batch_size = batch_size
         self.input_shape = input_shape
         self.shuffle = shuffle
@@ -112,6 +114,6 @@ class ImageDataGenerator(Sequence):
         """
         batch_data = self.annotations[idx * self.batch_size: (idx + 1) * self.batch_size]
         processed_images = np.array([self._load_and_preprocess_image(row) for _, row in batch_data.iterrows()])
-        input_data = self.image_processing_func(processed_images)
+        input_data = self.map(processed_images)
         output_data = np.array([self._get_output(row) for _, row in batch_data.iterrows()])
         return input_data, {"bbox": output_data[:, 0, :], "label": output_data[:, 1, :]}

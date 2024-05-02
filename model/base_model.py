@@ -1,50 +1,16 @@
+import tensorflow as tf
 from keras import Sequential
-from keras.layers import Input, Conv2D, Conv2DTranspose, MaxPooling2D, Flatten, BatchNormalization, Dropout, ReLU
+from keras.layers import Conv2D, Conv2DTranspose, MaxPooling2D, BatchNormalization, Dropout, ReLU
 from keras.models import Model
 from keras.src.applications import imagenet_utils
-from tensorflow import concat
-import tensorflow as tf
 
 from PostRes import PostRes
-
-
-# def create_base_model(input_shape=(512, 512, 3)):
-#     input_layer = Input(shape=input_shape)
-#
-#     # Add convolutional and pooling layers
-#     x = Conv2D(32, (3, 3), activation='relu')(input_layer)
-#     x = MaxPooling2D((2, 2))(x)
-#     x = Conv2D(64, (3, 3), activation='relu')(x)
-#     x = MaxPooling2D((2, 2))(x)
-#     x = Conv2D(128, (3, 3), activation='relu')(x)
-#     x = MaxPooling2D((2, 2))(x)
-#
-#     # Flatten the output to prepare it for the fully connected layers
-#     x = Flatten()(x)
-#
-#     # Create the model
-#     base_model = Model(inputs=input_layer, outputs=x)
-#
-#     return base_model
 
 
 def preprocess_input(x, data_format=None):
     return imagenet_utils.preprocess_input(
         x, data_format=data_format, mode="tf"
     )
-
-
-# def create_detection_model(input_shape=(512, 521, 3)):
-#     input_layer = Input(shape=input_shape)
-#
-#     # Create a structure similar to the detection model from deeplung
-#     # Specifically, the "3D Faster R-CNN with Deep 3D Dual Path Netfor Nodule Detection"
-#
-#     # instantiate the detection model
-#     detection_model = DetectionModel(input_shape=input_shape)
-#     detection_model.build(input_shape)
-#
-#     return detection_model
 
 
 class DetectionModel(Model):
