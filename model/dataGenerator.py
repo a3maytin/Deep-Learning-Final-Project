@@ -7,10 +7,9 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.utils import Sequence, to_categorical
 
 
-# Type 'ImageDataGenerator' doesn't have expected attributes 'df', 'map', '_load_image', 'data_directory_path'
 class ImageDataGenerator(Sequence):
     def __init__(self, annotations, data_directory_path, batch_size=64, input_shape=(512, 512, 3), shuffle=True,
-                 image_processing_func=None, map=None, df=None, _load_image=None):
+                 image_processing_func=None, _load_image=None):
         """
         :param annotations: Pandas DataFrame containing annotations for the images. Must have the following columns: patient_id, image_path, class
         :param data_directory_path: Directory path where the images are stored.

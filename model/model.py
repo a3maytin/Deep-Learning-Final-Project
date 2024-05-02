@@ -1,14 +1,11 @@
 import argparse
 
 import keras
-import numpy as np
 import pandas as pd
 import tensorflow as tf
-from PIL import Image
 from keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from keras.models import Model
 from keras.optimizers.legacy import Adam, SGD
-from matplotlib import patches, pyplot as plt
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
 from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
@@ -201,60 +198,6 @@ def split_data(data_filepath, test_size=0.1, random_state=42):
     val_gen = ImageDataGenerator(pd.concat([features_val, target_val], axis=1), data_filepath)
 
     return train_gen, test_gen, val_gen
-
-
-def display_prediction_on_sample_image(model, generator, sample_idx, save=False, save_path=None):
-    ''' Plota a imagem referente a uma instância dos dados, mostrando a predição do modelo '''
-
-    # Processamento da tupla de dados
-    data = generator.df.iloc[sample_idx]
-    X = generator.map(generator._load_image(data)).reshape((1, 512, 512, 3))
-
-    # Predição
-    labels = ["A", "B", "E", "G"]
-    bbox, label = np.mean(model(X), axis=1)
-    bbox = np.array(bbox * 512, dtype="int")
-    label = labels[np.argmax(label)]
-
-    # Plotagem da imagem
-    img = Image.open(generator.data_directory_path + data.filename)
-    fig, ax = plt.subplots()
-    ax.imshow(img)
-
-    # Retângulo da predição
-    pred_rect = patches.Rectangle(
-        (bbox[0], bbox[1]),
-        bbox[2] - bbox[0],
-        bbox[3] - bbox[1],
-        linewidth=2,
-        edgecolor='r',
-        facecolor='none',
-        label="predicted: " + label
-    )
-    ax.add_patch(pred_rect)
-
-    # Retângulo original
-    bbox = np.array([data.xmin, data.ymin, data.xmax, data.ymax])
-    bbox = np.array(bbox * 512, dtype="int")
-    rect = patches.Rectangle(
-        (bbox[0], bbox[1]),
-        bbox[2] - bbox[0],
-        bbox[3] - bbox[1],
-        linewidth=1,
-        edgecolor='b',
-        facecolor='none',
-        label="ground-truth: " + labels[data["class"]]
-    )
-    ax.add_patch(rect)
-
-    # Ajustes e plotagem final
-    ax.axis("off")
-    ax.legend(loc='upper right')
-    plt.grid(False)
-    # plt.show()
-
-    if save and save_path is not None:
-        fig.savefig(save_path + f"sample_{sample_idx}.png")
 
 
 if __name__ == "__main__":
